@@ -16,6 +16,46 @@ import sys
 from modeling.forward import ForwardContext, ForwardProxy
 
 
+class clist:
+    def __init__(self, name, *sc):
+        self.name = name
+        self.sc = c3_merge([[self]]+
+            [list(c.sc) for c in sc] + [list(sc)])
+    def __repr__(self):
+        return self.name
+
+def test_c3_merge():
+    x1 = clist('x1')
+    x2 = clist('x2')
+
+    assert x1.sc == [x1]
+    assert x2.sc == [x2]
+
+    y1 = clist('y1', x1)
+    y2 = clist('y2', x1)
+    y3 = clist('y3', x2)
+
+    assert y1.sc == [y1,x1]
+    assert y2.sc == [y2,x1]
+    assert y3.sc == [y3,x2]
+
+    z1 = clist('z1', y1,y3,y2)
+    assert z1.sc == [z1, y1, y3, x2, y2, x1]
+
+    z2 = clist('z2', z1, x1)
+    assert z2.sc == [z2, z1, y1, y3, x2, y2, x1]
+
+    z3 = clist('z3', y1, y2, y3)
+    assert z3.sc == [z3, y1, y2, x1, y3, x2]
+
+    with pytest.raises(ValueError):
+        clist('z3', x1, z1)
+    with pytest.raises(ValueError):
+        clist('z4', z1, z3)
+    with pytest.raises(ValueError):
+        clist('z5', z3, z1)
+
+
 def test_attribute():
     Attribute()
     
@@ -66,7 +106,7 @@ def test_relationship():
 def test_class_arguments():
     try:
         Class('x',None)
-        Class('x', Class('y',None))
+        Class('x', [Class('y',None)])
         Class('x', None, [Attribute()])
         Class('x', None, [])        
     except:
@@ -84,11 +124,11 @@ def test_class_arguemnt_errors():
     
 def test_class_hierarchy():
     Person = Class('Person', None, [Attribute('name', type=str)])
-    Employee = Class('Employee', Person, [
+    Employee = Class('Employee', [Person], [
                                           Attribute('salary', type=float, default=1000.0),
                                           Attribute('position', type=str, nullable=True)
                                           ])
-    Manager = Class('Manager', Employee)
+    Manager = Class('Manager', [Employee])
     Department = Class('Department',None, [
                                            Attribute('name', type=str)
                                            ])
@@ -105,6 +145,22 @@ def test_class_hierarchy():
     with pytest.raises(TypeError):
         Manager.is_subclass('Employee')
     
+    Owner = Class('Owner', [Person], [
+            Attribute('stake',type=float)
+    ])
+
+    OwnerManager = Class('OwnerManager', [Owner, Manager])
+
+    assert Owner.is_subclass(Person)
+    assert OwnerManager.is_subclass(Person)
+    assert OwnerManager.is_subclass(Owner)
+    assert OwnerManager.is_subclass(Manager)
+    assert OwnerManager.is_subclass(OwnerManager)
+
+    assert OwnerManager.get_attribute('stake') is Owner.get_attribute('stake')
+    assert OwnerManager.get_attribute('name') is Owner.get_attribute('name')
+    assert OwnerManager.get_attribute('name') is Person.get_attribute('name')
+    assert OwnerManager.get_attribute('name') is Manager.get_attribute('name')
 
 
 def test_annotation_syntax():
@@ -358,27 +414,27 @@ def test_declarative():
 
     assert cPerson.get_attribute('name').type is str
     assert len(list(cPerson.attributes))==1
-    assert cPerson.superclass is None
+    assert cPerson.superclasses == ()
     
     assert cEmployee.get_attribute('name').type is str
     assert cEmployee.get_attribute('salary').type is float
     assert cEmployee.get_attribute('position').type is str
     assert cEmployee.get_relationship('department').target is cDepartment
-    assert cEmployee.superclass is cPerson
+    assert cEmployee.superclasses == (cPerson,)
     
     
     assert cManager.get_attribute('name').type is str
     assert cManager.get_attribute('salary').type is float
     assert cManager.get_attribute('position').type is str
     assert cManager.get_relationship('manages').target is cDepartment
-    assert cManager.superclass is cEmployee
+    assert cManager.superclasses == (cEmployee,)
 
     assert cDepartment.get_attribute('name').type is str
     assert cDepartment.get_relationship('manager').target is cManager
     assert cDepartment.get_relationship('employees').target is cEmployee
     assert cDepartment.get_relationship('employees').kind is RelKind.MANY
         
-    assert cDepartment.superclass is None
+    assert cDepartment.superclasses == ()
     
     assert cManager.get_attribute('position').type is str
 
