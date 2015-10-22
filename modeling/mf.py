@@ -825,15 +825,15 @@ def refs(target=None, inv=None):
 	then peer this RelationshipEndpoint to the given one.
 	If inv is True, then define a self-relationship (a symmetric relationship).
 
-	The RelKind is MANY.
-		
-	class Person:
-		parent = ref()
-		children = refs(inv=parent)
-		
-	class UndirectedGraphNode:
-		neighbors = refs(int=True)
-		...
+	The ``RelKind`` is ``MANY``.
+	::		
+		class Person:
+			parent = ref()
+			children = refs(inv=parent)
+			
+		class UndirectedGraphNode:
+			neighbors = refs(int=True)
+			...
 	"""
 	return _ref_create(target, inv, RelKind.MANY)
 
