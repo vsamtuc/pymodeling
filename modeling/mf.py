@@ -415,19 +415,35 @@ class Class(NamedEntity):
     Class model.
 
     An mf.Class (to be distinguished from python classes) is defined by
-      * a superclass (which could be None), 
+      * an iterable of superclasses (which could be None or empty), 
       * a set of attributes 
       * a set of relationships
     
-    Note: we are talking about single inheritance and have no 'Object' class!
-    This is much like C++ with single inheritance.
+    Note: we are talking about multiple inheritance and have no 'Object' class!
+    This is much like C++ virtual inheritance. Also, we use the python MRO to
+    order all superclasses.
     """
-    def __init__(self, name=None, superclass=None, attributes=set()):
+    def __init__(self, name=None, superclasses=None, attributes=set()):
         super().__init__(name)
         
-        if superclass is not None and not isinstance(superclass, Class):
-            raise TypeError("The superclass must be an mf.Class instance")
-        self.__superclass = superclass
+        # superclasses is an iterable of mf.Class objects of python classes
+        # adorned witht the __model_class__ attribute, which must evaluate to
+        # an mf.Class.
+
+        sclist = []
+        if superclasses is None:
+            superclasses = ()
+        for c in superclasses:
+            C = c
+            if not isinstance(C, Class) and hasattr(C,'__model_class__'):
+                C = c.__model_class__
+            if not isinstance(C,Class):
+                raise TypeError("Each superclass must be an mf.Class instance or have attribute __model_class__, got %s" % c)
+            sclist.append(C)
+
+        self.__superclasses = tuple(sclist)
+
+
         
         self.__attributes = set(attributes)
         for attr in self.__attributes:
@@ -439,8 +455,8 @@ class Class(NamedEntity):
         self.__relationships = set()
                
     @property
-    def superclass(self):
-        return self.__superclass           
+    def superclasses(self):
+        return self.__superclasses
     
     
     def is_subclass(self, other):
