@@ -53,6 +53,13 @@ class Edge:
 
 @model
 class Resource(Vertex):
+	"""
+	A resource model.
+
+	Resources can be acquired by processes in an exclusive
+	manner, i.e., at most one process may hold it at any time.
+	"""
+
 
 	# Current resource owner process
 	def owner(self):
@@ -70,7 +77,18 @@ class Resource(Vertex):
 
 @model
 class Process(Vertex):
+	"""A Process model.
 
+	  Processes execution works as a sequence of function
+	  calls. The "next" function to be called is stored in the context
+	  attribute. When this function is called it returns the "next"
+	  function, to be stored in the context attribute.
+
+	  A function can request resources. When it requests resources,
+	  it becomes not-ready, until all requests are granted.
+
+	  A process can release all resources held.
+	"""
 	executor = ref()
 	context = attr(object, nullable=False)
 
@@ -92,6 +110,13 @@ class Process(Vertex):
 
 @model
 class Request(Edge):
+	"""
+	A request models an attempt of a process to acquire a resource.
+
+	When a request is issued, it is modeled as an edge from the
+	process to the resource. When it is granted, it is modeled by
+	reversing the edge.
+	"""
 
 	proc = attr(Process, nullable=False)
 	resource = attr(Resource, nullable=False)
@@ -118,6 +143,14 @@ class Request(Edge):
 
 @model
 class Executor:
+	"""
+	The executor advances the computation of a series of Processes.
+
+	In each cycle, it either executes a step of a ready process or
+	it grants a pending resource request of a free resource. The
+	action taken is selected randomly from available options.
+	"""
+
 	processes = refs(inv=Process.executor)	
 	cycle = attr(int)
 
