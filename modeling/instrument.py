@@ -514,9 +514,6 @@ def attribute_descriptor(name, default=Ellipsis, nullable=True, content_type=obj
         constraint = Constraint(constraint,"<for "+name+">")
 
     path_access = "_ATTR_%s" % name
-    #path_access = "__dict__['%s']" % name  # [N.B. for next upgrade]
-
-    def IF(cond, *args): return ''.join(args) if cond else ''
 
     if isinstance(content_type, tuple):
         typespec = ' or '.join(t.__name__ for t in content_type)
@@ -533,7 +530,6 @@ class {{name}}_descriptor(attr_descriptor):
         obj.{{path_access}} = Ellipsis
     % end
 
-    % if 1 or has_default:
     def __get__(self, obj, cls):
         try:
             return obj.{{path_access}}
@@ -547,7 +543,6 @@ class {{name}}_descriptor(attr_descriptor):
             % else:
                 raise AttributeError("object does not have attribute {{name}}")
             % end
-    % end
 
     ## Hard-wire nullable and constraints, for greater speed        
 % if has_setter:
