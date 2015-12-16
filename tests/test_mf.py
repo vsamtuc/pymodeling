@@ -112,7 +112,7 @@ def test_class_arguments():
     except:
         assert False
     
-def test_class_arguemnt_errors():
+def test_class_argument_errors():
     with pytest.raises(ValueError):
         Class('', int)
     with pytest.raises(TypeError):
@@ -120,7 +120,6 @@ def test_class_arguemnt_errors():
     with pytest.raises(TypeError):
         Class('foo', int, [])
     
-
     
 def test_class_hierarchy():
     Person = Class('Person', None, [Attribute('name', type=str)])
