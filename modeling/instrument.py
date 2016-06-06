@@ -40,12 +40,14 @@ class AssociationNoneError(ValueError, AssociationError):
 
 
 class Associator:
-    """Associators are container managers. Each associator is responsible for one side of a relationship.
+    """Associators are container managers. Each associator is responsible 
+    for one side of a relationship.
     
-    This class exists mostly for ducumentation purposes, and as a 'void' associator without a peer.
-    This is mainly useful for testing, or for using association containers standalone. In the latter
-    case, the elements and uniqueness semantics are enforced, but of course there is no actual
-    association.
+    This class exists mostly for ducumentation purposes, and as a 'void' 
+    associator without a peer. This is mainly useful for testing, or for 
+    using association containers standalone. In the latter case, the 
+    elements and uniqueness semantics are enforced, but of course there 
+    is no actual association.
     """
     def __init__(self, content_type):
         """The content_type must be passable as a second argument to isinstance(...)
@@ -70,7 +72,8 @@ class Associator:
     def validate_object(self, obj):
         """Validate an object before our side associates with it. 
         
-        At a minimum, this must check the object type. The currrent method checks just that.
+        At a minimum, this must check the object type. The currrent method checks
+        just that.
         """
         if obj is None:
             raise AssociationNoneError("cannot establish association with None")            
@@ -98,7 +101,7 @@ class PeerlessAssociator(PeerAssociator):
 
     For example:
     
-    S = SetAssociation(None, PeerlessAssociation(int))   
+    S = SetAssociation(None, PeerlessAssociator(int))   
     """
     def __init__(self, content_type):
         super().__init__(self, content_type, None)
